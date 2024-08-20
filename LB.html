@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiện ích LB</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF;
+            display: flex;
+            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
+            width: 1170px;
+            height: 1170px;
+            margin: 0 auto;
+        }
+
+        #top-header {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 64px;
+            background-color: #00324e;
+            display: inline;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #header-bar {
+            position: relative;
+            top: 0;
+            left: 50%;
+            width: 800px;
+            height: 64px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translateX(-50%);
+        }
+
+        #header-text {
+            position: absolute;
+            left: 0px;
+            width: 174px;
+            height: 18px;
+            text-align: left;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 18px;
+            color: white;
+        }
+
+        #video-container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 463px;
+        }
+
+        #input-url {
+            position: absolute;
+            margin-right: 10px;
+            width: 535px;
+            height: 32px;
+            border: 1px solid #aaaaaa;
+            left: 180px;
+            padding: 0 16px;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #888;
+            border-radius: 16px;
+        }
+
+        #setting-button {
+            position: absolute;
+            left: 770px;
+            height: 33.4px;
+            width: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.5;
+        }
+
+        #under-bar {
+            position: absolute;
+            top: 559px;
+            left: 50%;
+            width: 800px;
+            height: 32px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            transform: translateX(-50%);
+        }
+
+        #progress-bar-gray {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 677px;
+            height: 32px;
+            background-color: #dddddd;
+            z-index: 1;
+        }
+
+        #progress-bar-blue {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 677px;
+            height: 32px;
+            background-color: #0084ff;
+            z-index: 2;
+            transition: width 3s, background-color 0.1s;
+            visibility: hidden;
+        }
+        #progress-bar-blue.active {
+            background-color: #00ff73;
+            transition: background-color 0.15s ease; 
+        }
+
+        #replay-button {
+            position: absolute;
+            left: 697px;
+            width: 103px;
+            height: 32px;
+            background-color: #aaaaaa;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.15s ease; 
+        }
+
+        #replay-button:hover {
+            background-color: #888888; /* Màu nền khi hover */
+        }
+
+        /* Khi phần tử đang bị click */
+        #replay-button:active {
+            background-color: #555555; /* Màu nền khi click */
+        }
+        
+
+        #replay-icon {
+            position: absolute;
+            left: 26px;
+            width: 17px;
+            height: 16px;
+        }
+       
+        #three-seconds {
+            position: absolute;
+            left: 48px;
+            width: 30px;
+            height: 24px;
+            text-align: left;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="top-header">
+        <div id="header-bar">
+            <input id="input-url" type="text" placeholder="Nhập URL Youtube vào đây">
+            <div id="header-text">Listen and Back</div>
+            <div id="setting-button">
+                <img src="setting button.svg" alt="Setting Button">
+            </div>
+        </div>
+    </div>
+
+    <div id="video-container">
+        <div id="player"></div>
+    </div>
+
+    <div id="under-bar">
+        <div id="progress-bar-gray"></div>
+        <div id="progress-bar-blue"></div>
+        <div id="replay-button">
+            <div id="three-seconds">3s</div>
+            <img id="replay-icon" src="replay icon.svg" alt="Replay Icon">
+        </div>
+    </div>
+
+    <script>
+        let player;
+
+        // Load YouTube API
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '463',
+                width: '800',
+                videoId: '',
+                events: {
+                    'onReady': onPlayerReady,
+                    'onError': onPlayerError
+                },
+                playerVars: {
+                    'cc_load_policy': 0
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            const inputUrl = document.getElementById('input-url');
+            const replayButton = document.getElementById('replay-button');
+            const progressBarBlue = document.getElementById('progress-bar-blue');
+
+            inputUrl.addEventListener('change', () => {
+                const url = inputUrl.value;
+                const videoId = extractVideoId(url);
+
+                if (videoId) {
+                    player.loadVideoById(videoId);
+                } else {
+                    alert('Không thể nhận dạng ID video từ URL này.');
+                }
+            });
+           
+            let isAnimating = false; // Biến để theo dõi trạng thái của animation
+           
+            replayButton.addEventListener('click', () => {
+                if (progressBarBlue.animation) {
+                    progressBarBlue.animation.cancel(); // Hủy animation trước đó nếu có
+                }
+                // Thêm hoặc xóa class active cho button B
+                progressBarBlue.classList.toggle('active');
+
+                setTimeout(function() {
+                    progressBarBlue.classList.remove('active');
+                }, 40); // 200ms là thời gian class active tồn tại
+
+                progressBarBlue.style.visibility = 'visible'; 
+                progressBarBlue.style.width = '677px';
+
+                // Tạo animation cho thanh progress bar
+                progressBarBlue.animation = progressBarBlue.animate(
+                    [{ width: '677px' }, { width: '0px' }],
+                    { duration: 3000, easing: 'linear' }
+                );
+                
+                isAnimating = true; // Đặt trạng thái animation là true
+                
+                progressBarBlue.animation.onfinish = () => {
+                    isAnimating = false; // Animation hoàn tất
+                    if (replayButton.matches(':hover')) {
+                        // Nếu replayButton vẫn đang được hover, hiển thị lại PBB
+                        progressBarBlue.style.visibility = 'visible';
+                    } else {
+                        progressBarBlue.style.visibility = 'hidden';
+                    }
+                    toggleSubtitles(false);
+                };
+
+                const currentTimeX = player.getCurrentTime();
+                player.seekTo(currentTimeX - 3);
+                toggleSubtitles(true);
+            });
+
+            replayButton.addEventListener('mouseenter', () => {
+
+                progressBarBlue.style.visibility = 'visible';
+                progressBarBlue.style.width = '677px';
+            });
+
+            replayButton.addEventListener('mouseleave', () => {
+                if (!isAnimating) {
+                    // Nếu không có animation đang diễn ra, ẩn thanh progress bar
+                    progressBarBlue.style.visibility = 'hidden';
+                }
+            });
+        }
+
+        function extractVideoId(url) {
+            const urlPattern = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(urlPattern);
+            return match ? match[1] : null;
+        }
+
+        function toggleSubtitles(enable) {
+            player.loadModule("captions");
+            if (enable) {
+                player.setOption("captions", "track", {
+                    languageCode: "en"
+                });
+            } else {
+                player.unloadModule("captions");
+            }
+        }
+
+        function onPlayerError(event) {
+            console.error('YouTube Player Error:', event.data);
+            alert('Đã xảy ra lỗi khi tải video. Vui lòng thử lại.');
+        }
+
+        // Nhúng YouTube Iframe API vào trang
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Lưu và khôi phục trạng thái video
+        window.addEventListener('beforeunload', () => {
+            if (player && player.getVideoData()) {
+                localStorage.setItem('videoId', player.getVideoData().video_id);
+                localStorage.setItem('currentTime', player.getCurrentTime());
+            }
+        });
+
+        window.addEventListener('load', () => {
+            const savedVideoId = localStorage.getItem('videoId');
+            const savedTime = localStorage.getItem('currentTime');
+
+            if (savedVideoId && savedTime) {
+                player.loadVideoById(savedVideoId);
+                player.seekTo(parseFloat(savedTime));
+            }
+        });
+    </script>
+</body>
+</html>
